@@ -171,6 +171,10 @@ function M.show_preview()
 		end
 	end
 
+	if max_line_len == 0 then
+		return
+	end
+
 	local bufnr = api.nvim_create_buf(false, true)
 	api.nvim_buf_set_lines(bufnr, 0, 1, false, folded_lines)
 	bo[bufnr].filetype = bo.filetype
