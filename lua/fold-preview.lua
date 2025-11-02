@@ -127,6 +127,10 @@ function M.show_preview()
 	end
 	local fold_end = fn.foldclosedend(".")
 	local config = M.config
+	local fold_limit = 20
+	if fold_end > fold_start + fold_limit then
+		fold_end = fold_start + fold_limit
+	end
 
 	---Current window ID, i.e window from which preview was opened.
 	local curwin = api.nvim_get_current_win()
@@ -142,10 +146,16 @@ function M.show_preview()
 	---The number of folded lines.
 	local fold_size = fold_end - fold_start + 1
 
+	local offset_y = 1
+	local offset_x = 8
+
 	---The maximum line length of the folded region.
 	local max_line_len = 0
 
-	local folded_lines = api.nvim_buf_get_lines(0, fold_start - 1, fold_end, true)
+	local folded_lines = api.nvim_buf_get_lines(0, fold_start - 1 + 1, fold_end, true)
+	if not folded_lines then
+		return false
+	end
 	local blank_chars = folded_lines[1]:match("^%s+") or ""
 	local indent = #(blank_chars:gsub("\t", string.rep(" ", vim.bo.tabstop)))
 	local nbc = #blank_chars
@@ -168,7 +178,7 @@ function M.show_preview()
 
 	---The number of columns from the left boundary of the preview window to the
 	---right boundary of the current window.
-	local room_right = api.nvim_win_get_width(0) - get_text_offset(curwin) - indent
+	local room_right = api.nvim_win_get_width(0) - get_text_offset(curwin) - indent - 1
 
 	---The height of the winbar.
 	local winbar = (wo.winbar ~= "") and 1 or 0
@@ -180,6 +190,12 @@ function M.show_preview()
 		return false
 	end
 
+	local width = max_line_len + 2 - offset_x
+	if width > room_right - offset_x then
+		width = room_right - offset_x
+	end
+	local height = fold_size < room_below - offset_y and fold_size or room_below - offset_y
+
 	local winid = api.nvim_open_win(bufnr, false, {
 		anchor = "NW",
 		border = config.border,
@@ -189,20 +205,19 @@ function M.show_preview()
 			0,
 		},
 		-- The position of the window relative to 'bufpos' field.
-		row = config.border_shift[1],
-		col = indent + config.border_shift[4],
-		width = (max_line_len + 2 < room_right) and max_line_len + 1 or room_right - 1,
-		height = fold_size < room_below and fold_size or room_below,
+		row = config.border_shift[1] + offset_y,
+		col = indent + config.border_shift[4] + offset_x,
+		width = width,
+		height = height,
 		style = "minimal",
 		focusable = false,
 		noautocmd = true,
 	})
-	o.eventignore = "all"
 	wo[winid].winhighlight = "NormalFloat:FoldPreview,FloatBorder:FoldPreviewBorder"
 	wo[winid].foldenable = false
 	wo[winid].signcolumn = "no"
 	wo[winid].conceallevel = wo[curwin].conceallevel
-	o.eventignore = nil
+	wo[winid].wrap = false
 
 	function M._close_preview()
 		if api.nvim_win_is_valid(winid) then
