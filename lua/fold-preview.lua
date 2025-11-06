@@ -198,10 +198,10 @@ function M.show_preview()
 	if width > room_right - offset_x then
 		width = room_right - offset_x
 	end
-	if width < 2 then
+	local height = fold_size < room_below - offset_y and fold_size or room_below - offset_y
+	if width < 1 or height < 1 then
 		return
 	end
-	local height = fold_size < room_below - offset_y and fold_size or room_below - offset_y
 
 	local winid = api.nvim_open_win(bufnr, false, {
 		anchor = "NW",
