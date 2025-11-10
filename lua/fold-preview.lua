@@ -144,7 +144,7 @@ function M.show_preview()
 	o.winminheight = 1
 
 	---The number of folded lines.
-	local fold_size = fold_end - fold_start + 1
+	local fold_size = fold_end - fold_start
 
 	local offset_y = 1
 	local offset_x = 8
@@ -152,7 +152,7 @@ function M.show_preview()
 	---The maximum line length of the folded region.
 	local max_line_len = 0
 
-	local folded_lines = api.nvim_buf_get_lines(0, fold_start - 1 + 1, fold_end, true)
+	local folded_lines = api.nvim_buf_get_lines(0, fold_start, fold_end, true)
 	if not folded_lines then
 		return false
 	end
@@ -194,7 +194,7 @@ function M.show_preview()
 		return false
 	end
 
-	local width = max_line_len + 2 - offset_x
+	local width = max_line_len
 	if width > room_right - offset_x then
 		width = room_right - offset_x
 	end
