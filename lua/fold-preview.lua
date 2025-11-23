@@ -153,7 +153,7 @@ function M.show_preview()
 	local max_line_len = 0
 
 	local folded_lines = api.nvim_buf_get_lines(0, fold_start, fold_end, true)
-	if not folded_lines then
+	if not folded_lines or #folded_lines == 0 then
 		return false
 	end
 	local blank_chars = folded_lines[1]:match("^%s+") or ""
